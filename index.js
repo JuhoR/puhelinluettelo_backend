@@ -29,6 +29,7 @@ app.use(bodyParser.json())
   }
 }))*/
 app.use(morgan('tiny'))
+app.use(express.static('build'))
 let people=[
   {name: "Petteri",
   number:"123-45678",
