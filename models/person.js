@@ -12,12 +12,12 @@ mongoose.connect(url, { useNewUrlParser: true })
   .catch((error) => {console.log('error connecting to MongoDB:', error.message)})
 const personSchema = new mongoose.Schema({
   name: {type: String,
-    minlength: 3,
+    minlength: 3, // Minimipituus nimelle
     required: true,
     unique: true
   },
   number: {type: String,
-    minlength: 8,
+    minlength: 8, // minimipituus numerolle
     required: true
   }
 })

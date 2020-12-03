@@ -10,60 +10,21 @@ app.use(bodyParser.json())
 //morgan.token('body', (req) => JSON.stringify(req.body))
 app.use(cors())
 
-/*app.use(morgan((tokens, req, res) => {
-  const method = tokens.method(req, res)
-  if (method === 'POST') {
-    return [
-      method,
-      tokens.url(req, res),
-      tokens.status(req, res),
-      tokens.res(req, res, 'content-length'), '-',
-      tokens['response-time'](req, res), 'ms',
-      tokens.body(req)
-    ].join(' ')
-  }
-  else {
-    return [
-      method,
-      tokens.url(req, res),
-      tokens.status(req, res),
-      tokens.res(req, res, 'content-length'), '-',
-      tokens['response-time'](req, res), 'ms'
-    ].join(' ')
-  }
-}))*/
-app.use(morgan('tiny'))
-app.use(express.static('build'))
-/*let people=[
-  {name: "Petteri",
-  number:"123-45678",
-  id:1},
-  {name: "Juho",
-  number: "222-2222",
-  id:2}
-]*/
+// Tehtävä 3.8: kustomoitu morgan token
+morgan.token('body', (req, res) => JSON.stringify(req.body));
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
 
-/*app.get("/api/persons", (req, res) => {
-  res.json(people)
-})*/
+
+app.use(express.static('build'))
+
+// Hae kaikki tietokannassa olevat henkilöt
 app.get('/api/persons', (request, response) => {
   Person.find({}).then(people => {
     response.json(people.map(p => p.toJSON()))
   });
 });
 
-/*app.get("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id)
-  const person = people.find(p => p.id === id)
-
-  if (person){
-      res.json(person)
-  }
-  else {
-    res.status(404).end()
-  }
-
-})*/
+// Hae yksittäisen henkilön tiedot
 app.get("/api/persons/:id", (req, res, next) => {
   Person.findById(req.params.id).then(p => {
     if (p) {
@@ -74,6 +35,8 @@ app.get("/api/persons/:id", (req, res, next) => {
   }).catch(error => next(error))
 })
 
+
+// Tilasto tietokannassa olevista henkilöistä
 app.get("/info", (req, res) => {
   const date = new Date()
   Person.find({}).then(people => {
@@ -82,6 +45,8 @@ app.get("/info", (req, res) => {
   })
 })
 
+
+// Henkilön poisto: delete pyyntö /api/persons/:id
 app.delete("/api/persons/:id", (req, res, next) => {
   Person.findByIdAndRemove(req.params.id)
     .then(result => {
@@ -90,7 +55,9 @@ app.delete("/api/persons/:id", (req, res, next) => {
     .catch(error => next(error))
 })
 
-app.post("/api/persons", (req, res, next) => {
+
+// henkilön lisääminen tietokantaan
+app.post("/api/persons", (req, response, next) => {
   const body = req.body
   //console.log(body)
   if (!body.name) {
@@ -118,10 +85,11 @@ app.post("/api/persons", (req, res, next) => {
     number: body.number,
     //id: generate_id()
   })
-  person.save().then(saved => {res.json(saved.toJSON())}).catch(error => next(error))
+  person.save().then(saved => {response.json(saved.toJSON())}).catch(error => next(error))
 })
 
 
+// Henkilön tietojen päivittäminen: put pyyntö /api/persons/:id
 app.put("/api/persons/:id", (req, res, next) => {
   const body = req.body
   const person = {
@@ -141,11 +109,15 @@ app.put("/api/persons/:id", (req, res, next) => {
     .catch(error => next(error))
 })
 
+
+// Pyyntö olemattomaan endpointtiin
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
 }
 app.use(unknownEndpoint)
 
+
+// Virheiden käsittelijä
 const errorHandler = (error, request, response, next) => {
   console.error(error.message)
 
@@ -159,7 +131,7 @@ const errorHandler = (error, request, response, next) => {
 }
 app.use(errorHandler)
 
-const PORT = process.env.PORT
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
